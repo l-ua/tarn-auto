@@ -749,12 +749,6 @@ public class MainFrame extends BaseFrame {
 		String trainClass = getTrainClass();
 		System.out.println("共查询出"+ticketResult.size());
 		Object[] rowData = new Object[17];
-		System.out.println("----------------");
-		String data1= ticketResult.getString(1);
-		String[] datas1 = data1.split("\\|");
-		for (int i = 0; i <datas1.length ; i++) {
-			System.out.println(i+"="+datas1[i]);
-		}
 		for (int i=0;i<ticketResult.size();i++) {
 			String data = ticketResult.getString(i);
 			String[] datas = data.split("\\|");
