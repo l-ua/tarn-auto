@@ -11,6 +11,7 @@ import com.train.util.Logger;
 import com.train.util.ObjectToFile;
 
 import java.io.IOException;
+import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Date;
@@ -90,7 +91,7 @@ public class TrainService {
 		String result = new String(HttpsRequestNg.getHttpClient().doPost(urlStr), "UTF-8");
 		JSONObject parseObject = JSONObject.parseObject(result);
 		if (parseObject.getBooleanValue("status")) {
-			String ss = parseObject.getString("data").equals("Y") ? "成功" : "失败";
+			String ss = parseObject.getString("data").equals("N") ? "成功" : "失败";
 			logger.info("提交订单" + ss);
 			if (!parseObject.getBoolean("status") || !"[]".equals(parseObject.getString("messages"))) {
 				return parseObject;
@@ -383,7 +384,7 @@ public class TrainService {
 	 * @param startDate 出发日志
 	 * @return
 	 */
-	public static JSONArray queryTrain(String fromStation, String toStation, String startDate) {
+	public static JSONObject queryTrain(String fromStation, String toStation, String startDate) {
 		try {
 			String urlStr = TrainConf.queryUrl + startDate + "&leftTicketDTO.from_station=" + fromStation
 					+ "&leftTicketDTO.to_station=" + toStation + "&purpose_codes=ADULT";
@@ -392,8 +393,9 @@ public class TrainService {
 			JSONObject parseObject = JSONObject.parseObject(result);
 			if (!result.equals("-1")) {
 				if(parseObject.getBooleanValue("status")){
-					JSONArray data = parseObject.getJSONArray("data");
-					logger.info("车次查询成功共" + data.size() + "车次");
+					JSONObject data = parseObject.getJSONObject("data");
+					JSONArray result1 = data.getJSONArray("result");
+					logger.info("车次查询成功共" + result1.size() + "车次");
 					return data;
 				}
 				if(parseObject.containsKey("c_url")){
@@ -405,7 +407,7 @@ public class TrainService {
 			logger.info("车次查询失败");
 			e.printStackTrace();
 		}
-		return new JSONArray();
+		return new JSONObject();
 	}
 
 	/**

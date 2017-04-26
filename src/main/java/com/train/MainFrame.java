@@ -15,6 +15,8 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashSet;
@@ -115,6 +117,7 @@ public class MainFrame extends BaseFrame {
 	private SystemTray tray;
 	private TrayIcon trayIcon;
 	private MaskAdapter maskPanel;
+	private JSONObject sationMap;
 	public MainFrame() {
 		super();
 		try {
@@ -738,7 +741,7 @@ public class MainFrame extends BaseFrame {
 		}
 		return trainClass;
 	}
-	public void addTicketTableModel() {
+	public void addTicketTableModel()  {
 		DefaultTableModel defaultTableModel = ((DefaultTableModel) MainFrame.this.ticketTable.getModel());
 		for (int i = 0; i < defaultTableModel.getRowCount();) {
 			defaultTableModel.removeRow(i);
@@ -746,40 +749,48 @@ public class MainFrame extends BaseFrame {
 		String trainClass = getTrainClass();
 		System.out.println("共查询出"+ticketResult.size());
 		Object[] rowData = new Object[17];
+		System.out.println("----------------");
+		String data1= ticketResult.getString(1);
+		String[] datas1 = data1.split("\\|");
+		for (int i = 0; i <datas1.length ; i++) {
+			System.out.println(i+"="+datas1[i]);
+		}
 		for (int i=0;i<ticketResult.size();i++) {
-			JSONObject jsonObject = ticketResult.getJSONObject(i).getJSONObject("queryLeftNewDTO");
-			String stationTrainCode = jsonObject.getString("station_train_code");
+			String data = ticketResult.getString(i);
+			String[] datas = data.split("\\|");
+
+			String stationTrainCode = datas[3];
 			String trainCode = stationTrainCode.substring(0, 1);
 			if(trainClass.contains(trainCode)||(trainClassArr6.isSelected()&&(trainCode.equals("Y")||trainCode.matches("\\d+")))){
 				rowData[0] = new Boolean(false);
-				rowData[1] = stationTrainCode;
-				rowData[2] = jsonObject.getString("from_station_name")+"("+jsonObject.getString("start_time")+")";
-				rowData[3] = jsonObject.getString("to_station_name")+"("+jsonObject.getString("arrive_time")+")";
-				rowData[4] = jsonObject.getString("lishi");
-				rowData[5] = jsonObject.getString("swz_num");
-				rowData[6] = jsonObject.getString("tz_num");
-				rowData[7] = jsonObject.getString("zy_num");
-				rowData[8] = jsonObject.getString("ze_num");
-				rowData[9] = jsonObject.getString("gr_num");
-				rowData[10] = jsonObject.getString("rw_num");
-				rowData[11] = jsonObject.getString("yw_num");
-				rowData[12] = jsonObject.getString("rz_num");
-				rowData[13] = jsonObject.getString("yz_num");
-				rowData[14] = jsonObject.getString("wz_num");
-				rowData[15] = jsonObject.getString("qt_num");
+				rowData[1] = datas[3];
+				rowData[2] =sationMap.getString(datas[6]) +"("+datas[8]+")";
+				rowData[3] =sationMap.getString(datas[7]) +"("+datas[9]+")";
+				rowData[4] = datas[10];
+				rowData[5] = datas[32].equals("")?"--":datas[32];
+				rowData[6] = datas[25].equals("")?"--":datas[25];
+				rowData[7] = datas[31].equals("")?"--":datas[31];
+				rowData[8] = datas[30].equals("")?"--":datas[20];
+				rowData[9] = datas[21].equals("")?"--":datas[21];
+				rowData[10] = datas[23].equals("")?"--":datas[23];
+				rowData[11] = datas[28].equals("")?"--":datas[28];
+				rowData[12] = datas[24].equals("")?"--":datas[24];
+				rowData[13] = datas[29].equals("")?"--":datas[29];
+				rowData[14] = datas[26].equals("")?"--":datas[26];
+				rowData[15] = datas[22].equals("")?"--":datas[22];
 				StringBuffer sb=new StringBuffer();
-				sb.append(ticketResult.getJSONObject(i).getString("secretStr")).append(",");
-				sb.append(jsonObject.getString("yp_info")).append(",");
-				sb.append(jsonObject.getString("location_code")).append(",");
-				sb.append(jsonObject.getString("train_no")).append(",");
-				sb.append(jsonObject.getString("from_station_telecode")).append(",");
-				sb.append(jsonObject.getString("to_station_telecode")).append(",");
-				sb.append(jsonObject.getString("from_station_name")).append(",");
-				sb.append(jsonObject.getString("to_station_name")).append(",");
+				sb.append(datas[0]).append(",");
+				sb.append(datas[12]).append(",");
+				sb.append(datas[15]).append(",");
+				sb.append(datas[2]).append(",");
+				sb.append(datas[6]).append(",");
+				sb.append(datas[7]).append(",");
+				sb.append(sationMap.getString(datas[6])).append(",");
+				sb.append(sationMap.getString(datas[7])).append(",");
 				sb.append(stationTrainCode);
 				rowData[16] =sb.toString();
 				defaultTableModel.addRow(rowData);
-				if("预订".equals(ticketResult.getJSONObject(i).getString("buttonTextInfo"))&&!"".equals(ticketResult.getJSONObject(i).getString("secretStr"))){
+				if("Y".equals(datas[11])&&!"".equals(datas[0])){
 					hasTicket = true;
 				}
 			}
@@ -807,8 +818,10 @@ public class MainFrame extends BaseFrame {
 				String train_date = MainFrame.this.trainDate.getText();
 				String from_station_telecode = MainFrame.this.fromStationTelecode.getText().split("-")[1];
 				String to_station_telecode = MainFrame.this.toStationTelecode.getText().split("-")[1];
-				ticketResult = TrainService.queryTrain(from_station_telecode, to_station_telecode, train_date);
-				addTicketTableModel(); 
+				JSONObject jsonObject = TrainService.queryTrain(from_station_telecode, to_station_telecode, train_date);
+				sationMap=jsonObject.containsKey("map")?jsonObject.getJSONObject("map"):new JSONObject();
+				ticketResult=jsonObject.containsKey("result")?jsonObject.getJSONArray("result"):new JSONArray();
+				addTicketTableModel();
 				if (autoQueryCheckbox.isSelected() && hasTicket) {
 					autoQueryCheckbox.setSelected(false);
 					tip("有票了~~", System.currentTimeMillis());
