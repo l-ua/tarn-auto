@@ -21,7 +21,7 @@ public class LoginFrame extends BaseFrame {
 		Loading loading = Loading.getLoading();
 		loading.open();
 		try {
-			UIManager.setLookAndFeel("com.sun.java.swing.plaf.windows.WindowsLookAndFeel");
+			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 			if(TrainService.checkUser()){
 				new MainFrame().setVisible(true);
 				RandCodeJFrame.checkUserJob();
