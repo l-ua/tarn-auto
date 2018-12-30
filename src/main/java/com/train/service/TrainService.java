@@ -2,14 +2,18 @@ package com.train.service;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.train.MainFrame;
 import com.train.conf.TrainConf;
 import com.train.entity.Passenger;
 import com.train.entity.TicketData;
+import com.train.swing.PassengerCheckboxListener;
 import com.train.util.DateUtils;
 import com.train.util.HttpsRequestNg;
 import com.train.util.Logger;
 import com.train.util.ObjectToFile;
 
+import javax.swing.*;
+import java.awt.*;
 import java.io.IOException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
@@ -330,8 +334,19 @@ public class TrainService {
 				HttpsRequestNg.getHttpClient().cookies = ticketData.getMap();
 				String result = new String(HttpsRequestNg.getHttpClient().doPost(TrainConf.checkUser));
 				boolean boolean1 = JSONObject.parseObject(result).getJSONObject("data").getBoolean("flag");
-				System.out.println(DateUtils.longDate(new Date())+"checkUser"+boolean1);
+				System.out.println(DateUtils.longDate(new Date())+" checkUser "+boolean1);
+			/*	MainFrame.passengerJPanel.removeAll();
+				MainFrame.passengerJPanel.setLayout(new FlowLayout(FlowLayout.LEFT, 10, 10));
+				List<Passenger> passengers = TrainService.passengers();
+				for (int i = 0; i < passengers.size(); i++) {
+					Passenger passenger = passengers.get(i);
+					JCheckBox c = new JCheckBox(passenger.getPassenger_name());
+					c.addActionListener(new PassengerCheckboxListener(passenger, MainFrame));
+					passengerJPanel.add(c);
+				}
+				passengerJPanel.updateUI();*/
 				if (boolean1) {
+					//passengerJPanel;
 					return true;
 				}
 			}

@@ -22,11 +22,11 @@ public class LoginFrame extends BaseFrame {
 		loading.open();
 		try {
 			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-			if(TrainService.checkUser()){
+			/*if(TrainService.checkUser()){
 				new MainFrame().setVisible(true);
 				RandCodeJFrame.checkUserJob();
 				return;
-			}
+			}*/
 			frame= new LoginFrame();
 			init();
 			SwingUtilities.updateComponentTreeUI(frame);

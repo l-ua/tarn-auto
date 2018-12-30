@@ -37,7 +37,7 @@ public class TrainConf {
 	// 下单获取签名
 	public final static String initDc = base_url + "confirmPassenger/initDc";
 	// 查询火车票列表
-	public final static String queryUrl = base_url + getProperties().getProperty("query_url", "leftTicket/queryA") + "?leftTicketDTO.train_date=";
+	public final static String queryUrl = base_url + getProperties().getProperty("query_url", "leftTicket/queryZ") + "?leftTicketDTO.train_date=";
 	// 获取验证码
 	public final static String getPassCodeNewUrl = base_url + "passcodeNew/getPassCodeNew?module=";
 	// 校验验证码
