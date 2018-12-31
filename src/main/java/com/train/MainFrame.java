@@ -824,7 +824,7 @@ public class MainFrame extends BaseFrame {
                         while (!canselAutoBuyTicket.isSelected()) {
                             autoBuyTicket();
                             try {
-                                TrainService.logger.info("====休息 " + sleepTime + " 秒后再次抢票===");
+                                TrainService.logger.info("====休息 " + sleepTime/1000 + " 秒后再次抢票===");
                                 Thread.sleep(sleepTime);
                             } catch (InterruptedException e1) {
 
