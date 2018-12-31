@@ -1,53 +1,5 @@
 package com.train;
 
-import java.awt.AWTException;
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.Cursor;
-import java.awt.FlowLayout;
-import java.awt.SystemTray;
-import java.awt.Toolkit;
-import java.awt.TrayIcon;
-import java.awt.event.*;
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
-import java.text.SimpleDateFormat;
-import java.util.*;
-import java.util.stream.Collectors;
-
-import javax.swing.BorderFactory;
-import javax.swing.DefaultCellEditor;
-import javax.swing.DefaultComboBoxModel;
-import javax.swing.GroupLayout;
-import javax.swing.GroupLayout.Alignment;
-import javax.swing.ImageIcon;
-import javax.swing.JButton;
-import javax.swing.JCheckBox;
-import javax.swing.JComboBox;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JSpinner;
-import javax.swing.JTabbedPane;
-import javax.swing.JTable;
-import javax.swing.JTextArea;
-import javax.swing.JTextField;
-import javax.swing.LayoutStyle.ComponentPlacement;
-import javax.swing.ListSelectionModel;
-import javax.swing.RowSorter;
-import javax.swing.SwingConstants;
-import javax.swing.UIManager;
-import javax.swing.event.AncestorEvent;
-import javax.swing.event.AncestorListener;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
-import javax.swing.table.DefaultTableCellRenderer;
-import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableCellRenderer;
-import javax.swing.table.TableRowSorter;
-import javax.swing.text.DefaultCaret;
-
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.train.entity.Passenger;
@@ -55,26 +7,36 @@ import com.train.entity.TranInfo;
 import com.train.enums.SeatEnum;
 import com.train.service.OrderQueueWaitTime;
 import com.train.service.TrainService;
-import com.train.swing.AutoComplete;
-import com.train.swing.BaseFrame;
-import com.train.swing.DatePickerTextField;
-import com.train.swing.KeyValue;
-import com.train.swing.OrderPanel;
-import com.train.swing.PassengerCheckboxListener;
+import com.train.swing.*;
 import com.train.util.CheckUtils;
-import com.train.util.DateUtils;
 import com.train.util.Images;
+import com.train.util.Logger;
 import com.train.util.MaskAdapter;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
+import javax.swing.*;
+import javax.swing.GroupLayout.Alignment;
+import javax.swing.LayoutStyle.ComponentPlacement;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableCellRenderer;
+import javax.swing.table.TableRowSorter;
+import javax.swing.text.DefaultCaret;
+import java.awt.*;
+import java.awt.event.*;
+import java.text.SimpleDateFormat;
+import java.util.*;
+import java.util.List;
+import java.util.stream.Collectors;
+
 public class MainFrame extends BaseFrame {
+    private final static Logger logger = new Logger();
     /**
      *
      */
     private static final long serialVersionUID = 3354878488469592363L;
     private JCheckBox autoQueryCheckbox;//是否自动查询余票
     private JCheckBox autoBuyTicket;//是否自动购票
+    private JCheckBox canselAutoBuyTicket;//取消自动购票
     // "商务座", "特等座", "一等座",
     //       "二等座", "高级软卧 ", “动卧”"软卧", "硬卧", "软座", "硬座", "无座"
     private JCheckBox autoBuyShangWuZuo;//在自选席别的没有的情况下自动购商务座特等座
@@ -144,6 +106,8 @@ public class MainFrame extends BaseFrame {
 
     JComboBox comboBox;
 
+    volatile Long count;
+
 
     volatile List<Object[]> rowDatas = new ArrayList<>();
     volatile List<TranInfo> tranInfos = new ArrayList<>();
@@ -172,7 +136,7 @@ public class MainFrame extends BaseFrame {
                     e1.printStackTrace();
                 }
             }
-//			
+//
         });
         if (SystemTray.isSupported()) {
             tray();
@@ -246,6 +210,8 @@ public class MainFrame extends BaseFrame {
         trainDate = new DatePickerTextField();
         queryButton = new JButton();
         buyButton = new JButton();
+        canselAutoBuyTicket = new JCheckBox();
+        canselAutoBuyTicket.setText("取消自动购买");
         panel6 = new JPanel();
         trainClassArr1 = new JCheckBox();
         trainClassArr2 = new JCheckBox();
@@ -296,8 +262,8 @@ public class MainFrame extends BaseFrame {
             @Override
             public void mouseClicked(MouseEvent e) {
                 //if (e.isMetaDown()) {
-                    toGetpassengerJson();
-               // }
+                toGetpassengerJson();
+                // }
             }
         });
 
@@ -359,8 +325,7 @@ public class MainFrame extends BaseFrame {
         toStationTelecode.setText("请输入终点");
 
         ticketNoOrder.setForeground(new Color(153, 153, 153));
-        ticketNoOrder.setText("请输入车次优先级，车次之间用逗号隔开");
-
+        ticketNoOrder.setText("输入车次(逗号隔开)");
 
         seatOrderField.setForeground(Color.RED);
         seatOrderField.setText("");
@@ -541,6 +506,18 @@ public class MainFrame extends BaseFrame {
 
             }
         });
+        canselAutoBuyTicket.addItemListener(new ItemListener() {
+            @Override
+            public void itemStateChanged(ItemEvent e) {
+                if (canselAutoBuyTicket.isSelected()) {
+                    TrainService.logger.info("取消自动购买车票");
+                    TrainService.logger.info("取消自动购买车票");
+                    TrainService.logger.info("取消自动购买车票");
+                    TrainService.logger.info("取消自动购买车票");
+                    TrainService.logger.info("取消自动购买车票");
+                }
+            }
+        });
         autoRuanZuo.addItemListener(new ItemListener() {
             @Override
             public void itemStateChanged(ItemEvent e) {
@@ -624,13 +601,15 @@ public class MainFrame extends BaseFrame {
                                                 .addComponent(autoYingZuo).addGap(9)
                                                 .addComponent(autoBuyWuZuo).addGap(9)
                                                 .addComponent(comboBox).addGap(9)
-                                                .addComponent(buyButton)
+                                                .addComponent(buyButton).addGap(9)
+
                                                 .addPreferredGap(ComponentPlacement.RELATED)
                                                 .addGap(20))
 
                                         .addGroup(panel6Layout.createSequentialGroup()
                                                 .addComponent(xiBieDesc).addGap(9)
-                                                .addComponent(seatOrderField))
+                                                .addComponent(seatOrderField).
+                                                        addComponent(canselAutoBuyTicket))
                                         .addGroup(panel6Layout.createSequentialGroup()
                                                 .addComponent(trainClassArr1)
                                                 .addPreferredGap(ComponentPlacement.RELATED)
@@ -682,10 +661,10 @@ public class MainFrame extends BaseFrame {
                                         .addComponent(autoYingZuo).addGap(9)
                                         .addComponent(autoBuyWuZuo).addGap(9)
                                         .addComponent(comboBox).addGap(9)
-                                        .addComponent(buyButton))
+                                        .addComponent(buyButton).addGap(9))
                                 .addGroup(panel6Layout.createParallelGroup(Alignment.CENTER)
                                         .addComponent(xiBieDesc).addGap(9)
-                                        .addComponent(seatOrderField).addGap(9))
+                                        .addComponent(seatOrderField).addGap(9).addComponent(canselAutoBuyTicket))
                                 .addContainerGap(20, Short.MAX_VALUE))
         );
         panel6.setLayout(panel6Layout);
@@ -836,7 +815,25 @@ public class MainFrame extends BaseFrame {
         buyButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                autoBuyTicket();
+                long sleepTime = 1000L;
+                canselAutoBuyTicket.setSelected(false);
+                count = 1l;
+                new Thread() {
+                    @Override
+                    public void run() {
+                        while (!canselAutoBuyTicket.isSelected()) {
+                            autoBuyTicket();
+                            try {
+                                TrainService.logger.info("====休息 " + sleepTime + " 秒后再次抢票===");
+                                Thread.sleep(sleepTime);
+                            } catch (InterruptedException e1) {
+
+                            }
+                        }
+                    }
+                }.start();
+
+
             }
         });
         trainDate.setText(new SimpleDateFormat("yyyy-MM-dd").format(new Date()));
@@ -918,6 +915,9 @@ public class MainFrame extends BaseFrame {
     }
 
     private void autoBuyTicket() {
+
+        logJLabel.updateUI();
+        TrainService.logger.info("开启第" + ++count + "次抢票任务");
         if (CheckUtils.isNull(seatOrderField.getText())) {
             tip("请选择自动购买席别");
             return;
@@ -947,22 +947,11 @@ public class MainFrame extends BaseFrame {
         mapperTranInfo();
         //  sortNoTickResult();
         addTicketTableModel();
-        if (autoQueryCheckbox.isSelected() && hasTicket) {
-            autoQueryCheckbox.setSelected(false);
-            tip("有票了~~", System.currentTimeMillis());
-        }
-        maskPanel.setMask(false);
 
+        maskPanel.setMask(false);
         // 优先车次，然后坐席
         ticketNoStr = ticketNoOrder.getText();
-
-        Integer colIndex = null;
-        if (orderByTran()) {
-            colIndex = getCanBuyTickect();
-        } else {
-            colIndex = findBySeatFirst();
-        }
-
+        Integer colIndex = getCanBuyTickect();
         if (null == colIndex) {
             return;
         }
@@ -977,46 +966,6 @@ public class MainFrame extends BaseFrame {
         submitData.add(ticketTable.getValueAt(colIndex, 1).toString());
         toSubmutOrderRequest(colIndex);
         submitJButton.setEnabled(true);
-        /*Map<String, Object> map = new HashMap<>();
-        if (CheckUtils.isNotNull(ticketNoStr)) {
-            List<String> tickets = Arrays.asList(ticketNoStr.trim().split(","));
-            map.put("ticketNo", tickets);
-        }
-        if (CheckUtils.isNotNull(rowDatas)) {
-            //  车次级别一样吧
-            // 先满足用户默认的席别，然后根据用户勾选的席别，并且席别座位数大于5张
-            // 根据车次在表中的顺序掉用提交按钮
-            //
-        }
-        List<String> zuoweis = new ArrayList<>();
-        if (autoBuyShangWuZuo.isSelected()) {
-            zuoweis.add("9");
-        }
-        if (autoYiDengZuo.isSelected()) {
-            zuoweis.add("M");
-        }
-        if (autoErDengZuo.isSelected()) {
-            zuoweis.add("O");
-        }
-        if (autoGaoJiRuanWo.isSelected()) {
-            zuoweis.add("6");
-        }
-        if (autoRuanWo.isSelected()) {
-            zuoweis.add("4");
-        }
-        if (autoYingWo.isSelected()) {
-            zuoweis.add("3");
-        }
-        if (autoRuanZuo.isSelected()) {
-            zuoweis.add("2");
-        }
-        if (autoYingZuo.isSelected()) {
-            zuoweis.add("1");
-        }
-        if (autoBuyWuZuo.isSelected()) {
-            zuoweis.add("0");
-        }*/
-        //
     }
 
     private Integer findBySeatFirst() {
@@ -1048,22 +997,23 @@ public class MainFrame extends BaseFrame {
                 } else {
                     seatType = findSeatType(code2TranMap.get(tranCode));
                     if (CheckUtils.isNull(seatType)) {
-                        tip("用户所选的席别没有余票", System.currentTimeMillis());
+                        TrainService.logger.info("用户所选的席别没有余票");
                         return null;
                     }
                     return code2TranMap.get(tranCode).getIndex();
                 }
             }
         }
-        tip("自选的车次中，不含有余票", System.currentTimeMillis());
+        TrainService.logger.info("自选的车次中，不含有余票");
+        TrainService.logger.info("结束第" + count + "次抢票任务");
+
         return null;
 
 
     }
 
     private String findSeatType(TranInfo tranInfo) {
-        String[] seatNames = ticketNoOrder.getText().trim().split(",");
-
+        String[] seatNames = seatOrderField.getText().trim().split(",");
         for (String seatName : seatNames) {
             if (tranInfo.isHaveTicket(seatName, tranInfo)) {
                 return SeatEnum.getEnumByName(seatName).getCode();
@@ -1124,8 +1074,8 @@ public class MainFrame extends BaseFrame {
             sb.append(sationMap.getString(datas[6])).append(",");
             sb.append(sationMap.getString(datas[7])).append(",");
             sb.append(stationTrainCode);
-           tranInfo.setTranInfoMsg(sb.toString());
-          System.out.println(i + " tran info  " + tranInfo.toString());
+            tranInfo.setTranInfoMsg(sb.toString());
+            System.out.println(i + " tran info  " + tranInfo.toString());
             tranInfos.add(tranInfo);
         }
 
@@ -1185,6 +1135,7 @@ public class MainFrame extends BaseFrame {
 
         if (autoYiDengZuo.isSelected()) {
             isSelect = true;
+            zuoweis.add("M");
             zuoweis.add("M");
         }
         if (autoErDengZuo.isSelected()) {
@@ -1329,7 +1280,7 @@ public class MainFrame extends BaseFrame {
         System.out.println("共查询出" + ticketResult.size());
         rowDatas = new ArrayList<>();
         Object[] rowData = new Object[17];
-       // tranInfos = new ArrayList<>();
+        // tranInfos = new ArrayList<>();
         TranInfo tranInfo = null;
         for (int i = 0; i < ticketResult.size(); i++) {
             String data = ticketResult.getString(i);
@@ -1367,8 +1318,8 @@ public class MainFrame extends BaseFrame {
                 sb.append(sationMap.getString(datas[7])).append(",");
                 sb.append(stationTrainCode);
                 tranInfo.setTranInfoMsg(sb.toString());
-               // System.out.println(i + " tran info  " + tranInfo.toString());
-              //  tranInfos.add(tranInfo);
+                // System.out.println(i + " tran info  " + tranInfo.toString());
+                //  tranInfos.add(tranInfo);
 
                 rowData[0] = new Boolean(false);
                 rowData[1] = datas[3];
@@ -1504,7 +1455,7 @@ public class MainFrame extends BaseFrame {
                             alert(checkOrderInfo);
                         }
                     } catch (Exception e) {
-                        e.printStackTrace();
+
                     }
                 }
             }.start();

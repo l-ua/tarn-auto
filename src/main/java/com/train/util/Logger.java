@@ -15,6 +15,7 @@ public class Logger {
 		if(logger!=null){
 			logger.append(DateUtils.longDate(new Date())+str+"\r\n");
 			logger.setCaretPosition(logger.getText().length());
+
 		}
 	}
 }

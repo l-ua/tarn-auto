@@ -29,7 +29,7 @@ import java.util.regex.Pattern;
  *
  */
 public class TrainService {
-	private final static Logger logger = new Logger();
+	public final static Logger logger = new Logger();
 
 	/**
 	 * 查询列车经停站
